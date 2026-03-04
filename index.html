@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHAWN'S PROXY - YOUR WORKER</title>
+    <title>SHAWN'S PROXY - YOUTUBE + INSTAGRAM</title>
     <style>
         * {
             margin: 0;
@@ -24,10 +24,10 @@
 
         .container {
             width: 100%;
-            max-width: 1300px;
+            max-width: 1400px;
             background: #111827;
             border: 4px solid #00ffff;
-            border-radius: 50px;
+            border-radius: 60px;
             padding: 2rem;
             box-shadow: 0 0 100px #00ffff99;
         }
@@ -52,6 +52,37 @@
             margin-bottom: 2rem;
             border-bottom: 2px dashed #ff00ff;
             padding-bottom: 1rem;
+        }
+
+        .service-tabs {
+            display: flex;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab {
+            background: #1f2a44;
+            border: 2px solid #4b5563;
+            padding: 1rem 3rem;
+            border-radius: 60px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.3rem;
+            transition: 0.2s;
+        }
+
+        .tab:hover {
+            border-color: #00ffff;
+            background: #2d3b60;
+        }
+
+        .tab.active {
+            background: #00d4ff;
+            border-color: white;
+            color: black;
+            box-shadow: 0 0 30px cyan;
         }
 
         .search-box {
@@ -104,7 +135,7 @@
             min-height: 400px;
         }
 
-        .video-card {
+        .video-card, .post-card {
             background: #1e293b;
             border-radius: 30px;
             overflow: hidden;
@@ -113,7 +144,7 @@
             transition: 0.2s;
         }
 
-        .video-card:hover {
+        .video-card:hover, .post-card:hover {
             transform: translateY(-8px);
             border-color: #00ffff;
             box-shadow: 0 0 30px cyan;
@@ -183,20 +214,25 @@
 <body>
     <div class="container">
         <h1>SHAWN'S PROXY</h1>
-        <div class="tagline">🔱 POWERED BY YOUR CLOUDFLARE WORKER 🔱</div>
+        <div class="tagline">🔱 YOUTUBE + INSTAGRAM 🔱</div>
 
         <div class="worker-status" id="workerStatus">
             ✅ YOUR WORKER IS LIVE: https://shawn-proxy-worker.shawn-johnson.workers.dev
         </div>
 
+        <div class="service-tabs">
+            <div class="tab active" data-service="youtube">🎬 YOUTUBE</div>
+            <div class="tab" data-service="instagram">📷 INSTAGRAM</div>
+        </div>
+
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Search YouTube..." value="popular music">
+            <input type="text" id="searchInput" placeholder="Search or enter username...">
             <button id="searchBtn">GO</button>
         </div>
 
         <div class="results-grid" id="resultsGrid">
             <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #88aaff; font-size: 1.3rem;">
-                🔥 Click GO to search 🔥
+                🔥 Select a service and search 🔥
             </div>
         </div>
 
@@ -223,6 +259,29 @@
         const resetBtn = document.getElementById('resetBtn');
         const messageEl = document.getElementById('message');
         const workerStatus = document.getElementById('workerStatus');
+        const tabs = document.querySelectorAll('.tab');
+
+        let activeService = 'youtube';
+
+        // Set active service
+        function setActiveService(service) {
+            tabs.forEach(tab => {
+                if (tab.dataset.service === service) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            activeService = service;
+            
+            if (service === 'youtube') {
+                searchInput.placeholder = 'Search YouTube...';
+                statusEl.textContent = '⚡ YouTube mode active';
+            } else {
+                searchInput.placeholder = 'Enter Instagram username (e.g., @natgeo)...';
+                statusEl.textContent = '⚡ Instagram mode active';
+            }
+        }
 
         function showMessage(msg, isError = true) {
             messageEl.style.display = 'block';
@@ -238,12 +297,27 @@
                 return;
             }
 
-            statusEl.textContent = '🔍 Searching via YOUR worker...';
+            statusEl.textContent = `🔍 Searching ${activeService} via YOUR worker...`;
             resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;">Loading...</div>';
 
             try {
-                // Use your worker to fetch YouTube search results
-                const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+                let searchUrl;
+                
+                if (activeService === 'youtube') {
+                    // YouTube search
+                    searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+                } else {
+                    // Instagram profile or search
+                    if (query.startsWith('@') || query.match(/^[a-zA-Z0-9._]+$/)) {
+                        // Treat as username
+                        const username = query.replace('@', '');
+                        searchUrl = `https://www.instagram.com/${username}/`;
+                    } else {
+                        // Treat as hashtag search
+                        searchUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(query.replace('#', ''))}/`;
+                    }
+                }
+                
                 const proxyUrl = `${WORKER_URL}/?url=${encodeURIComponent(searchUrl)}`;
                 
                 console.log('Fetching:', proxyUrl);
@@ -256,33 +330,48 @@
                 
                 const html = await response.text();
                 
-                // Extract video IDs from the HTML
-                const videoIds = extractVideoIds(html);
-                
-                if (videoIds.length === 0) {
-                    throw new Error('No videos found');
-                }
-
-                // Display results
-                resultsGrid.innerHTML = videoIds.slice(0, 12).map(id => {
-                    // Use your worker to create the watch URL
-                    const watchUrl = `${WORKER_URL}/?url=${encodeURIComponent('https://youtube.com/watch?v=' + id)}`;
+                if (activeService === 'youtube') {
+                    // Extract YouTube video IDs
+                    const videoIds = extractYouTubeIds(html);
                     
-                    return `
-                        <div class="video-card" onclick="window.open('${watchUrl}', '_blank')">
-                            <div class="thumbnail">
-                                <img src="https://img.youtube.com/vi/${id}/mqdefault.jpg" loading="lazy">
+                    if (videoIds.length === 0) {
+                        throw new Error('No videos found');
+                    }
+
+                    resultsGrid.innerHTML = videoIds.slice(0, 12).map(id => {
+                        const watchUrl = `${WORKER_URL}/?url=${encodeURIComponent('https://youtube.com/watch?v=' + id)}`;
+                        
+                        return `
+                            <div class="video-card" onclick="window.open('${watchUrl}', '_blank')">
+                                <div class="thumbnail">
+                                    <img src="https://img.youtube.com/vi/${id}/mqdefault.jpg" loading="lazy">
+                                </div>
+                                <div class="info">
+                                    <div class="title">Video ID: ${id}</div>
+                                    <div class="channel">Click to play via YOUR worker</div>
+                                </div>
                             </div>
-                            <div class="info">
-                                <div class="title">Video ID: ${id}</div>
-                                <div class="channel">Click to play via YOUR worker</div>
+                        `;
+                    }).join('');
+                } else {
+                    // Instagram - extract profile info
+                    // For Instagram, we'll just open the profile directly
+                    resultsGrid.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+                            <div style="background: #1e293b; border-radius: 30px; padding: 2rem;">
+                                <h2 style="color: #00ffff; margin-bottom: 1rem;">📷 Instagram Profile</h2>
+                                <p style="color: #88aaff; margin-bottom: 2rem;">${query}</p>
+                                <button onclick="window.open('${proxyUrl}', '_blank')" 
+                                        style="background: linear-gradient(45deg, #2563eb, #c026d3); color: white; padding: 1rem 3rem; border: none; border-radius: 60px; font-size: 1.3rem; cursor: pointer; border: 3px solid #00ffff;">
+                                    📱 Open Instagram
+                                </button>
                             </div>
                         </div>
                     `;
-                }).join('');
+                }
 
-                statusEl.textContent = `✅ Found ${videoIds.length} videos - Using YOUR worker`;
-                workerStatus.innerHTML = '✅ YOUR WORKER IS WORKING! Videos loaded successfully.';
+                statusEl.textContent = `✅ Loaded - Using YOUR worker`;
+                workerStatus.innerHTML = '✅ YOUR WORKER IS WORKING!';
                 showMessage('Search complete!', false);
 
             } catch (error) {
@@ -300,8 +389,8 @@
             }
         }
 
-        // Helper to extract video IDs from YouTube HTML
-        function extractVideoIds(html) {
+        // Extract YouTube video IDs from HTML
+        function extractYouTubeIds(html) {
             const regex = /"videoId":"([^"]+)"/g;
             const matches = [];
             let match;
@@ -325,6 +414,13 @@
             }
         };
 
+        // Tab click handlers
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                setActiveService(tab.dataset.service);
+            });
+        });
+
         searchBtn.addEventListener('click', searchVideos);
         
         searchInput.addEventListener('keypress', (e) => {
@@ -332,15 +428,13 @@
         });
 
         resetBtn.addEventListener('click', () => {
-            resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #88aaff; font-size: 1.3rem;">🔥 Click GO to search 🔥</div>';
+            resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #88aaff; font-size: 1.3rem;">🔥 Select a service and search 🔥</div>';
             statusEl.textContent = '⚡ Using YOUR Cloudflare Worker';
             showMessage('Reset complete', false);
         });
 
-        // Test worker on load
-        window.addEventListener('load', () => {
-            setTimeout(testWorker, 1000);
-        });
+        // Initialize
+        setActiveService('youtube');
     </script>
 </body>
 </html>
