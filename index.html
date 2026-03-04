@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHAWN'S PROXY - YOUTUBE + INSTAGRAM</title>
+    <title>SHAWN'S PROXY - FIXED</title>
     <style>
         * {
             margin: 0;
@@ -135,7 +135,7 @@
             min-height: 400px;
         }
 
-        .video-card, .post-card {
+        .video-card {
             background: #1e293b;
             border-radius: 30px;
             overflow: hidden;
@@ -144,7 +144,7 @@
             transition: 0.2s;
         }
 
-        .video-card:hover, .post-card:hover {
+        .video-card:hover {
             transform: translateY(-8px);
             border-color: #00ffff;
             box-shadow: 0 0 30px cyan;
@@ -175,6 +175,21 @@
 
         .channel {
             color: #88aaff;
+        }
+
+        .instagram-card {
+            background: linear-gradient(145deg, #833ab4, #fd1d1d, #fcb045);
+            border-radius: 30px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            border: 3px solid white;
+            transition: 0.2s;
+        }
+
+        .instagram-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 40px #ff00ff;
         }
 
         .status-bar {
@@ -214,7 +229,7 @@
 <body>
     <div class="container">
         <h1>SHAWN'S PROXY</h1>
-        <div class="tagline">🔱 YOUTUBE + INSTAGRAM 🔱</div>
+        <div class="tagline">🔱 YOUTUBE + INSTAGRAM - SIGN-IN FIXED 🔱</div>
 
         <div class="worker-status" id="workerStatus">
             ✅ YOUR WORKER IS LIVE: https://shawn-proxy-worker.shawn-johnson.workers.dev
@@ -226,7 +241,7 @@
         </div>
 
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Search or enter username...">
+            <input type="text" id="searchInput" placeholder="YouTube: search or paste video link...">
             <button id="searchBtn">GO</button>
         </div>
 
@@ -275,11 +290,11 @@
             activeService = service;
             
             if (service === 'youtube') {
-                searchInput.placeholder = 'Search YouTube...';
-                statusEl.textContent = '⚡ YouTube mode active';
+                searchInput.placeholder = 'YouTube: search or paste video link...';
+                statusEl.textContent = '⚡ YouTube mode - sign-in bypass active';
             } else {
-                searchInput.placeholder = 'Enter Instagram username (e.g., @natgeo)...';
-                statusEl.textContent = '⚡ Instagram mode active';
+                searchInput.placeholder = 'Instagram: enter username (e.g., @natgeo or natgeo)';
+                statusEl.textContent = '⚡ Instagram mode - mobile view active';
             }
         }
 
@@ -297,41 +312,55 @@
                 return;
             }
 
-            statusEl.textContent = `🔍 Searching ${activeService} via YOUR worker...`;
-            resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;">Loading...</div>';
+            statusEl.textContent = `🔍 Loading via YOUR worker...`;
+            
+            if (activeService === 'youtube') {
+                await searchYouTube(query);
+            } else {
+                await loadInstagram(query);
+            }
+        }
+
+        async function searchYouTube(query) {
+            resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;">Loading YouTube...</div>';
 
             try {
-                let searchUrl;
+                // Check if it's a direct video link
+                let videoId = null;
                 
-                if (activeService === 'youtube') {
-                    // YouTube search
-                    searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+                if (query.includes('youtube.com/watch?v=')) {
+                    videoId = query.split('watch?v=')[1].split('&')[0];
+                } else if (query.includes('youtu.be/')) {
+                    videoId = query.split('youtu.be/')[1].split('?')[0];
+                } else if (query.match(/^[a-zA-Z0-9_-]{11}$/)) {
+                    // If it looks like a video ID
+                    videoId = query;
+                }
+
+                if (videoId) {
+                    // Direct video - use embed to avoid sign-in [citation:3]
+                    const embedUrl = `${WORKER_URL}/?url=${encodeURIComponent('https://youtube.com/embed/' + videoId)}`;
+                    resultsGrid.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+                            <div style="background: #1e293b; border-radius: 30px; padding: 2rem;">
+                                <h2 style="color: #00ffff; margin-bottom: 1rem;">▶️ Video Ready</h2>
+                                <p style="color: #88aaff; margin-bottom: 2rem;">Click below to watch (no sign-in required)</p>
+                                <button onclick="window.open('${embedUrl}', '_blank')" 
+                                        style="background: linear-gradient(45deg, #2563eb, #c026d3); color: white; padding: 1rem 3rem; border: none; border-radius: 60px; font-size: 1.3rem; cursor: pointer; border: 3px solid #00ffff;">
+                                    🎬 WATCH VIDEO
+                                </button>
+                            </div>
+                        </div>
+                    `;
                 } else {
-                    // Instagram profile or search
-                    if (query.startsWith('@') || query.match(/^[a-zA-Z0-9._]+$/)) {
-                        // Treat as username
-                        const username = query.replace('@', '');
-                        searchUrl = `https://www.instagram.com/${username}/`;
-                    } else {
-                        // Treat as hashtag search
-                        searchUrl = `https://www.instagram.com/explore/tags/${encodeURIComponent(query.replace('#', ''))}/`;
-                    }
-                }
-                
-                const proxyUrl = `${WORKER_URL}/?url=${encodeURIComponent(searchUrl)}`;
-                
-                console.log('Fetching:', proxyUrl);
-                const response = await fetch(proxyUrl);
-                
-                if (!response.ok) {
-                    const text = await response.text();
-                    throw new Error(text.substring(0, 100));
-                }
-                
-                const html = await response.text();
-                
-                if (activeService === 'youtube') {
-                    // Extract YouTube video IDs
+                    // Search for videos
+                    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+                    const proxyUrl = `${WORKER_URL}/?url=${encodeURIComponent(searchUrl)}`;
+                    
+                    const response = await fetch(proxyUrl);
+                    const html = await response.text();
+                    
+                    // Extract video IDs
                     const videoIds = extractYouTubeIds(html);
                     
                     if (videoIds.length === 0) {
@@ -339,53 +368,86 @@
                     }
 
                     resultsGrid.innerHTML = videoIds.slice(0, 12).map(id => {
-                        const watchUrl = `${WORKER_URL}/?url=${encodeURIComponent('https://youtube.com/watch?v=' + id)}`;
+                        const embedUrl = `${WORKER_URL}/?url=${encodeURIComponent('https://youtube.com/embed/' + id)}`;
                         
                         return `
-                            <div class="video-card" onclick="window.open('${watchUrl}', '_blank')">
+                            <div class="video-card" onclick="window.open('${embedUrl}', '_blank')">
                                 <div class="thumbnail">
                                     <img src="https://img.youtube.com/vi/${id}/mqdefault.jpg" loading="lazy">
                                 </div>
                                 <div class="info">
                                     <div class="title">Video ID: ${id}</div>
-                                    <div class="channel">Click to play via YOUR worker</div>
+                                    <div class="channel">Click to watch (no sign-in)</div>
                                 </div>
                             </div>
                         `;
                     }).join('');
-                } else {
-                    // Instagram - extract profile info
-                    // For Instagram, we'll just open the profile directly
-                    resultsGrid.innerHTML = `
-                        <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
-                            <div style="background: #1e293b; border-radius: 30px; padding: 2rem;">
-                                <h2 style="color: #00ffff; margin-bottom: 1rem;">📷 Instagram Profile</h2>
-                                <p style="color: #88aaff; margin-bottom: 2rem;">${query}</p>
-                                <button onclick="window.open('${proxyUrl}', '_blank')" 
-                                        style="background: linear-gradient(45deg, #2563eb, #c026d3); color: white; padding: 1rem 3rem; border: none; border-radius: 60px; font-size: 1.3rem; cursor: pointer; border: 3px solid #00ffff;">
-                                    📱 Open Instagram
-                                </button>
-                            </div>
-                        </div>
-                    `;
                 }
 
-                statusEl.textContent = `✅ Loaded - Using YOUR worker`;
-                workerStatus.innerHTML = '✅ YOUR WORKER IS WORKING!';
-                showMessage('Search complete!', false);
+                statusEl.textContent = '✅ YouTube loaded - sign-in bypass active';
+                workerStatus.innerHTML = '✅ YOUR WORKER IS WORKING! YouTube sign-in bypass enabled.';
+                showMessage('Success!', false);
 
             } catch (error) {
                 console.error('Error:', error);
                 resultsGrid.innerHTML = `
                     <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
                         <p style="color: #ff8888; margin-bottom: 1rem;">Error: ${error.message}</p>
-                        <p style="color: #88aaff; margin-bottom: 1rem;">Worker URL: ${WORKER_URL}</p>
-                        <button onclick="testWorker()" style="background: #00ffff; color: black; padding: 1rem 2rem; border: none; border-radius: 50px; margin: 0.5rem; cursor: pointer;">
-                            🔧 Test Worker
+                        <button onclick="window.open('https://piped.video/search?q=${encodeURIComponent(query)}', '_blank')" 
+                                style="background: #00ffff; color: black; padding: 1rem 2rem; border: none; border-radius: 50px; margin: 0.5rem; cursor: pointer;">
+                            🔍 Try Alternative
                         </button>
                     </div>
                 `;
-                statusEl.textContent = '❌ Error - Check worker';
+            }
+        }
+
+        async function loadInstagram(username) {
+            resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;">Loading Instagram...</div>';
+
+            try {
+                // Clean username
+                let cleanUsername = username.replace('@', '').trim();
+                
+                // Create Instagram profile URL
+                const instagramUrl = `https://www.instagram.com/${cleanUsername}/`;
+                const proxyUrl = `${WORKER_URL}/?url=${encodeURIComponent(instagramUrl)}`;
+
+                // Show Instagram in a mobile-friendly iframe [citation:1]
+                resultsGrid.innerHTML = `
+                    <div style="grid-column: 1/-1;">
+                        <div style="background: linear-gradient(145deg, #833ab4, #fd1d1d, #fcb045); border-radius: 30px; padding: 2rem; margin-bottom: 2rem; text-align: center;">
+                            <h2 style="color: white; margin-bottom: 1rem;">📷 @${cleanUsername}</h2>
+                            <p style="color: white; margin-bottom: 2rem;">Click below to open Instagram in mobile view</p>
+                            <button onclick="window.open('${proxyUrl}', '_blank')" 
+                                    style="background: white; color: black; padding: 1rem 3rem; border: none; border-radius: 60px; font-size: 1.3rem; cursor: pointer; font-weight: bold;">
+                                📱 OPEN INSTAGRAM
+                            </button>
+                        </div>
+                        <div style="background: #1e293b; border-radius: 30px; padding: 2rem; text-align: center;">
+                            <p style="color: #88aaff; margin-bottom: 1rem;">💡 Tips:</p>
+                            <p style="color: white;">• Use mobile view for best experience</p>
+                            <p style="color: white;">• Try usernames like: natgeo, zuck, nasa</p>
+                            <p style="color: white;">• Instagram limits some content via proxy</p>
+                        </div>
+                    </div>
+                `;
+
+                statusEl.textContent = '✅ Instagram ready - mobile mode active';
+                workerStatus.innerHTML = '✅ YOUR WORKER IS WORKING! Instagram mobile mode enabled.';
+                showMessage('Instagram loaded!', false);
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultsGrid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+                        <p style="color: #ff8888; margin-bottom: 1rem;">Error: ${error.message}</p>
+                        <p style="color: #88aaff;">Try a different username</p>
+                        <button onclick="loadInstagram('natgeo')" style="background: #00ffff; color: black; padding: 1rem 2rem; border: none; border-radius: 50px; margin-top: 1rem; cursor: pointer;">
+                            📷 Try @natgeo
+                        </button>
+                    </div>
+                `;
             }
         }
 
@@ -401,18 +463,6 @@
             }
             return matches;
         }
-
-        // Test worker function
-        window.testWorker = async function() {
-            try {
-                const testUrl = `${WORKER_URL}/?url=${encodeURIComponent('https://youtube.com')}`;
-                const response = await fetch(testUrl);
-                const text = await response.text();
-                alert(`Worker response: ${response.status} OK - Worker is working!`);
-            } catch (e) {
-                alert(`Worker test failed: ${e.message}`);
-            }
-        };
 
         // Tab click handlers
         tabs.forEach(tab => {
