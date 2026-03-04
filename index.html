@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SHAWN'S PROXY - FINAL WORKING VERSION</title>
+    <title>SHAWN'S VPN - YOUR PRIVATE TUNNEL</title>
     <style>
         * {
             margin: 0;
@@ -22,76 +22,148 @@
             color: white;
         }
 
-        .container {
+        .vpn-card {
             width: 100%;
             max-width: 1400px;
             background: #111827;
             border: 4px solid #00ffff;
             border-radius: 60px;
-            padding: 2rem;
+            padding: 2.5rem;
             box-shadow: 0 0 100px #00ffff99;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background effect */
+        .vpn-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(0, 255, 255, 0.1) 50%, transparent 70%);
+            animation: vpn-shine 8s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes vpn-shine {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         h1 {
             font-size: 6rem;
             text-align: center;
-            background: linear-gradient(135deg, #00ffff, #ff00ff, #ffff00);
+            background: linear-gradient(135deg, #00ffff, #ff00ff, #ffff00, #ff8800);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            text-shadow: 0 0 40px cyan;
+            text-shadow: 0 0 50px cyan;
             margin-bottom: 0.2rem;
+            position: relative;
+            z-index: 2;
         }
 
-        .tagline {
+        .vpn-badge {
             text-align: center;
-            color: #ffaa00;
-            font-size: 2rem;
-            font-weight: bold;
-            text-shadow: 0 0 20px orange;
+            font-size: 1.5rem;
             margin-bottom: 2rem;
-            border-bottom: 2px dashed #ff00ff;
+            color: #ffaa00;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            border-bottom: 2px solid #ff00ff;
             padding-bottom: 1rem;
+            position: relative;
+            z-index: 2;
         }
 
-        .worker-status {
+        .status-panel {
             background: #1e1b4b;
             border-left: 10px solid #00ffff;
-            padding: 1rem;
-            border-radius: 20px;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
+            border-right: 10px solid #ff00ff;
+            border-radius: 40px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 2;
         }
 
-        .quick-links {
+        .status-light {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .light {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #00ff00;
+            box-shadow: 0 0 20px #00ff00;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .server-url {
+            background: #2d3a5e;
+            padding: 0.8rem 1.5rem;
+            border-radius: 60px;
+            font-family: monospace;
+            font-size: 1rem;
+            border: 2px solid #00ffff;
+        }
+
+        .service-tabs {
             display: flex;
             gap: 1rem;
             margin: 2rem 0;
             flex-wrap: wrap;
             justify-content: center;
+            position: relative;
+            z-index: 2;
         }
 
-        .quick-link {
-            background: linear-gradient(145deg, #2563eb, #7c3aed);
-            padding: 1rem 2rem;
+        .tab {
+            background: #1f2a44;
+            border: 2px solid #3b82f6;
+            padding: 1rem 2.5rem;
             border-radius: 60px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 1.1rem;
-            border: 2px solid #00ffff;
+            font-size: 1.2rem;
             transition: 0.2s;
         }
 
-        .quick-link:hover {
-            transform: scale(1.05);
+        .tab:hover {
+            border-color: #00ffff;
+            transform: translateY(-3px);
             box-shadow: 0 0 30px cyan;
         }
 
-        .search-box {
+        .tab.active {
+            background: #00d4ff;
+            border-color: white;
+            color: black;
+            font-weight: 900;
+        }
+
+        .search-section {
             display: flex;
             gap: 1rem;
             margin: 2rem 0;
             flex-wrap: wrap;
+            position: relative;
+            z-index: 2;
         }
 
         #searchInput {
@@ -135,6 +207,8 @@
             gap: 1.5rem;
             margin: 2rem 0;
             min-height: 400px;
+            position: relative;
+            z-index: 2;
         }
 
         .video-card {
@@ -179,20 +253,48 @@
             color: #88aaff;
         }
 
+        .instagram-card {
+            background: linear-gradient(145deg, #833ab4, #fd1d1d, #fcb045);
+            border-radius: 30px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            border: 3px solid white;
+            transition: 0.2s;
+        }
+
+        .instagram-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 40px #ff00ff;
+        }
+
         .status-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 1rem;
+            margin-top: 2rem;
             padding: 1rem 2rem;
             background: #1f2a44;
             border-radius: 60px;
+            position: relative;
+            z-index: 2;
         }
 
         #status {
             color: #4ade80;
             font-weight: bold;
             font-size: 1.2rem;
+        }
+
+        #resetBtn {
+            background: #374151;
+            border: none;
+            color: white;
+            padding: 0.5rem 2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            border: 2px solid #6b7280;
         }
 
         #message {
@@ -202,51 +304,71 @@
             display: none;
             font-weight: bold;
             text-align: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .vpn-footer {
+            margin-top: 2rem;
+            text-align: center;
+            color: #6b8cff;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>SHAWN'S PROXY</h1>
-        <div class="tagline">🔱 YOUR WORKER IS WORKING! 🔱</div>
+    <div class="vpn-card">
+        <h1>SHAWN'S VPN</h1>
+        <div class="vpn-badge">🔒 YOUR PRIVATE TUNNEL 🔒</div>
 
-        <div class="worker-status" id="workerStatus">
-            ✅ YOUR WORKER IS LIVE: https://shawn-proxy-worker.shawn-johnson.workers.dev
+        <div class="status-panel">
+            <div class="status-light">
+                <div class="light"></div>
+                <span style="color: #00ff00; font-weight: bold;">BACKEND CONNECTED</span>
+            </div>
+            <div class="server-url" id="serverUrl">
+                Loading...
+            </div>
         </div>
 
-        <div class="quick-links">
-            <div class="quick-link" onclick="playVideo('dQw4w9WgXcQ')">🎵 Rick Astley</div>
-            <div class="quick-link" onclick="playVideo('jNQXAC9IVRw')">📹 First YouTube Video</div>
-            <div class="quick-link" onclick="playVideo('kJQP7kiw5Fk')">🎸 Luis Fonsi</div>
-            <div class="quick-link" onclick="playVideo('JGwWNGJdvx8')">🎤 Ed Sheeran</div>
+        <div class="service-tabs">
+            <div class="tab active" data-service="youtube">🎬 YOUTUBE</div>
+            <div class="tab" data-service="instagram">📷 INSTAGRAM</div>
+            <div class="tab" data-service="twitter">🐦 TWITTER</div>
+            <div class="tab" data-service="reddit">🤖 REDDIT</div>
+            <div class="tab" data-service="tiktok">🎵 TIKTOK</div>
         </div>
 
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Enter search term or YouTube URL...">
+        <div class="search-section">
+            <input type="text" id="searchInput" placeholder="YouTube: search or paste video link...">
             <button id="searchBtn">GO</button>
         </div>
 
         <div class="results-grid" id="resultsGrid">
             <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #88aaff; font-size: 1.3rem;">
-                🔥 Click a quick link above or search 🔥
+                🔥 Enter a search term above 🔥
             </div>
         </div>
 
         <div class="status-bar">
             <div>
-                <span id="status">⚡ YOUR WORKER IS READY</span>
+                <span id="status">⚡ Connected to YOUR backend</span>
             </div>
             <div>
-                <button id="resetBtn" style="background: #374151; border: none; color: white; padding: 0.5rem 2rem; border-radius: 50px; cursor: pointer;">⟲ RESET</button>
+                <button id="resetBtn">⟲ RESET</button>
             </div>
         </div>
 
         <div id="message"></div>
+        
+        <div class="vpn-footer">
+            🔐 THIS IS YOUR PRIVATE VPN • POWERED BY SHAWN'S BACKEND • 100% YOURS
+        </div>
     </div>
 
     <script>
-        // YOUR WORKER URL
-        const WORKER_URL = 'https://shawn-proxy-worker.shawn-johnson.workers.dev';
+        // 🔴 YOUR BACKEND URL - UPDATE THIS WHEN YOUR BACKEND IS DEPLOYED
+        const BACKEND_URL = 'https://shawn-proxy-backend-api.onrender.com';
 
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
@@ -254,6 +376,40 @@
         const statusEl = document.getElementById('status');
         const resetBtn = document.getElementById('resetBtn');
         const messageEl = document.getElementById('message');
+        const serverUrl = document.getElementById('serverUrl');
+        const tabs = document.querySelectorAll('.tab');
+
+        let activeService = 'youtube';
+
+        serverUrl.textContent = BACKEND_URL;
+
+        function setActiveService(service) {
+            tabs.forEach(tab => {
+                if (tab.dataset.service === service) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            activeService = service;
+            
+            if (service === 'youtube') {
+                searchInput.placeholder = 'YouTube: search or paste video link...';
+                statusEl.textContent = '⚡ YouTube mode - using YOUR backend';
+            } else if (service === 'instagram') {
+                searchInput.placeholder = 'Instagram: enter username (e.g., natgeo)';
+                statusEl.textContent = '⚡ Instagram mode - using YOUR backend';
+            } else if (service === 'twitter') {
+                searchInput.placeholder = 'Twitter: enter username (e.g., NASA)';
+                statusEl.textContent = '⚡ Twitter mode - using YOUR backend';
+            } else if (service === 'reddit') {
+                searchInput.placeholder = 'Reddit: enter subreddit (e.g., funny)';
+                statusEl.textContent = '⚡ Reddit mode - using YOUR backend';
+            } else if (service === 'tiktok') {
+                searchInput.placeholder = 'TikTok: enter username (e.g., charli)';
+                statusEl.textContent = '⚡ TikTok mode - using YOUR backend';
+            }
+        }
 
         function showMessage(msg, isError = true) {
             messageEl.style.display = 'block';
@@ -262,123 +418,187 @@
             if (!isError) setTimeout(() => messageEl.style.display = 'none', 3000);
         }
 
-        // Play video function - uses YOUR worker
-        window.playVideo = function(videoId) {
-            const embedUrl = `${WORKER_URL}/?url=${encodeURIComponent('https://youtube.com/embed/' + videoId)}`;
+        async function searchYouTube(query) {
+            resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 2rem;">Loading via YOUR backend...</div>';
             
-            resultsGrid.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
-                    <div style="background: #1e293b; border-radius: 30px; padding: 2rem;">
-                        <h2 style="color: #00ffff; margin-bottom: 1rem;">▶️ Video Ready</h2>
-                        <p style="color: #88aaff; margin-bottom: 2rem;">Video ID: ${videoId}</p>
-                        <button onclick="window.open('${embedUrl}', '_blank')" 
-                                style="background: linear-gradient(45deg, #2563eb, #c026d3); color: white; padding: 1rem 3rem; border: none; border-radius: 60px; font-size: 1.3rem; cursor: pointer; border: 3px solid #00ffff;">
-                            🎬 WATCH VIDEO
-                        </button>
-                        <p style="color: #88aaff; margin-top: 2rem;">Video opens in new tab using YOUR worker</p>
-                    </div>
-                </div>
-            `;
-            
-            statusEl.textContent = `✅ Video ${videoId} ready`;
-        };
+            try {
+                // Check if it's a video ID
+                let videoId = null;
+                if (query.includes('youtube.com/watch?v=')) {
+                    videoId = query.split('watch?v=')[1].split('&')[0];
+                } else if (query.includes('youtu.be/')) {
+                    videoId = query.split('youtu.be/')[1].split('?')[0];
+                } else if (query.match(/^[a-zA-Z0-9_-]{11}$/)) {
+                    videoId = query;
+                }
 
-        // Handle search
-        async function handleSearch() {
-            const query = searchInput.value.trim();
-            if (!query) {
-                showMessage('Enter something to search');
-                return;
-            }
-
-            // Check if it's a YouTube URL
-            let videoId = null;
-            
-            if (query.includes('youtube.com/watch?v=')) {
-                videoId = query.split('watch?v=')[1].split('&')[0];
-            } else if (query.includes('youtu.be/')) {
-                videoId = query.split('youtu.be/')[1].split('?')[0];
-            } else if (query.match(/^[a-zA-Z0-9_-]{11}$/)) {
-                videoId = query;
-            }
-
-            if (videoId) {
-                playVideo(videoId);
-            } else {
-                // For search terms, show a message with search options
-                resultsGrid.innerHTML = `
-                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
-                        <div style="background: #1e293b; border-radius: 30px; padding: 2rem;">
-                            <h2 style="color: #00ffff; margin-bottom: 1rem;">🔍 Search: "${query}"</h2>
-                            <p style="color: #88aaff; margin-bottom: 2rem;">Click a video below to play</p>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
-                                <div class="video-card" onclick="playVideo('dQw4w9WgXcQ')">
-                                    <div class="thumbnail">
-                                        <img src="https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg">
-                                    </div>
-                                    <div class="info">
-                                        <div class="title">Rick Astley</div>
-                                    </div>
-                                </div>
-                                <div class="video-card" onclick="playVideo('jNQXAC9IVRw')">
-                                    <div class="thumbnail">
-                                        <img src="https://img.youtube.com/vi/jNQXAC9IVRw/mqdefault.jpg">
-                                    </div>
-                                    <div class="info">
-                                        <div class="title">First YouTube Video</div>
-                                    </div>
-                                </div>
-                                <div class="video-card" onclick="playVideo('kJQP7kiw5Fk')">
-                                    <div class="thumbnail">
-                                        <img src="https://img.youtube.com/vi/kJQP7kiw5Fk/mqdefault.jpg">
-                                    </div>
-                                    <div class="info">
-                                        <div class="title">Luis Fonsi</div>
-                                    </div>
-                                </div>
-                                <div class="video-card" onclick="playVideo('JGwWNGJdvx8')">
-                                    <div class="thumbnail">
-                                        <img src="https://img.youtube.com/vi/JGwWNGJdvx8/mqdefault.jpg">
-                                    </div>
-                                    <div class="info">
-                                        <div class="title">Ed Sheeran</div>
-                                    </div>
-                                </div>
+                if (videoId) {
+                    const embedUrl = `${BACKEND_URL}/proxy?url=${encodeURIComponent('https://www.youtube.com/embed/' + videoId + '?autoplay=0')}`;
+                    resultsGrid.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+                            <div style="background: #1e293b; border-radius: 30px; padding: 2rem;">
+                                <h2 style="color: #00ffff; margin-bottom: 1rem;">▶️ Video Ready</h2>
+                                <p style="color: #88aaff; margin-bottom: 2rem;">Playing via YOUR private backend</p>
+                                <button onclick="window.open('${embedUrl}', '_blank')" 
+                                        style="background: linear-gradient(45deg, #2563eb, #c026d3); color: white; padding: 1rem 3rem; border: none; border-radius: 60px; font-size: 1.3rem; cursor: pointer; border: 3px solid #00ffff;">
+                                    🎬 WATCH VIDEO
+                                </button>
                             </div>
                         </div>
+                    `;
+                } else {
+                    // Use your backend to search
+                    const searchUrl = `${BACKEND_URL}/youtube-search?q=${encodeURIComponent(query)}`;
+                    const response = await fetch(searchUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error('Backend error');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (!data || data.length === 0) {
+                        throw new Error('No results found');
+                    }
+
+                    resultsGrid.innerHTML = data.slice(0, 12).map(item => {
+                        const videoId = item.url ? item.url.split('=')[1] : item.videoId;
+                        const embedUrl = `${BACKEND_URL}/proxy?url=${encodeURIComponent('https://www.youtube.com/embed/' + videoId + '?autoplay=0')}`;
+                        const thumbnail = item.thumbnail || `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
+                        
+                        return `
+                            <div class="video-card" onclick="window.open('${embedUrl}', '_blank')">
+                                <div class="thumbnail">
+                                    <img src="${thumbnail}" loading="lazy" onerror="this.src='https://img.youtube.com/vi/${videoId}/mqdefault.jpg'">
+                                </div>
+                                <div class="info">
+                                    <div class="title">${item.title || 'Video'}</div>
+                                    <div class="channel">${item.uploaderName || item.author || 'YouTube'}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+                
+                statusEl.textContent = '✅ YouTube loaded via YOUR backend';
+                showMessage('Success!', false);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultsGrid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+                        <p style="color: #ff8888; margin-bottom: 1rem;">Error: ${error.message}</p>
+                        <p style="color: #88aaff; margin-bottom: 1rem;">Try a quick video: dQw4w9WgXcQ</p>
+                        <button onclick="searchYouTube('dQw4w9WgXcQ')" style="background: #00ffff; color: black; padding: 1rem 2rem; border: none; border-radius: 50px; margin-top: 1rem;">
+                            🎬 Test Rick Astley
+                        </button>
                     </div>
                 `;
             }
         }
 
-        // Test worker on load
-        async function testWorker() {
-            try {
-                const testUrl = `${WORKER_URL}/?url=${encodeURIComponent('https://youtube.com')}`;
-                const response = await fetch(testUrl);
-                if (response.ok) {
-                    statusEl.textContent = '✅ YOUR WORKER IS WORKING!';
-                    showMessage('Worker test passed!', false);
-                }
-            } catch (e) {
-                console.log('Worker test:', e.message);
+        function loadInstagram() {
+            const username = searchInput.value.trim().replace('@', '');
+            if (!username) {
+                showMessage('Enter an Instagram username');
+                return;
+            }
+
+            resultsGrid.innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+                    <div class="instagram-card" onclick="window.open('https://proxigram.art/${username}', '_blank')">
+                        <h2 style="color: white; margin-bottom: 1rem; font-size: 2rem;">📷 @${username}</h2>
+                        <p style="color: white; margin-bottom: 2rem;">Click to open Instagram in new tab</p>
+                        <div style="background: white; color: black; padding: 1rem 2rem; border-radius: 60px; display: inline-block; font-weight: bold;">
+                            📱 OPEN INSTAGRAM
+                        </div>
+                    </div>
+                    <p style="color: #88aaff; margin-top: 2rem;">Using Proxigram - works when Instagram is blocked</p>
+                </div>
+            `;
+            statusEl.textContent = '✅ Instagram ready';
+        }
+
+        function loadTwitter() {
+            const username = searchInput.value.trim().replace('@', '');
+            if (!username) {
+                showMessage('Enter a Twitter username');
+                return;
+            }
+            window.open(`https://nitter.net/${username}`, '_blank');
+            showMessage('Opening Twitter...', false);
+        }
+
+        function loadReddit() {
+            const subreddit = searchInput.value.trim();
+            if (!subreddit) {
+                showMessage('Enter a subreddit name');
+                return;
+            }
+            window.open(`https://teddit.net/r/${subreddit}`, '_blank');
+            showMessage('Opening Reddit...', false);
+        }
+
+        function loadTikTok() {
+            const username = searchInput.value.trim().replace('@', '');
+            if (!username) {
+                showMessage('Enter a TikTok username');
+                return;
+            }
+            window.open(`https://proxitok.pabloferreiro.es/@${username}`, '_blank');
+            showMessage('Opening TikTok...', false);
+        }
+
+        function handleSearch() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                showMessage('Enter something');
+                return;
+            }
+
+            if (activeService === 'youtube') {
+                searchYouTube(query);
+            } else if (activeService === 'instagram') {
+                loadInstagram();
+            } else if (activeService === 'twitter') {
+                loadTwitter();
+            } else if (activeService === 'reddit') {
+                loadReddit();
+            } else if (activeService === 'tiktok') {
+                loadTikTok();
             }
         }
 
-        // Event listeners
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                setActiveService(tab.dataset.service);
+            });
+        });
+
         searchBtn.addEventListener('click', handleSearch);
+        
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleSearch();
         });
 
         resetBtn.addEventListener('click', () => {
-            resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #88aaff; font-size: 1.3rem;">🔥 Click a quick link above or search 🔥</div>';
-            statusEl.textContent = '⚡ YOUR WORKER IS READY';
+            resultsGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #88aaff; font-size: 1.3rem;">🔥 Enter a search term above 🔥</div>';
+            statusEl.textContent = '⚡ Connected to YOUR backend';
             showMessage('Reset complete', false);
         });
 
-        // Test worker on load
-        testWorker();
+        // Test backend connection on load
+        fetch(`${BACKEND_URL}`)
+            .then(res => {
+                if (res.ok) {
+                    statusEl.textContent = '✅ BACKEND CONNECTED';
+                }
+            })
+            .catch(err => {
+                statusEl.textContent = '⚠️ Waiting for backend...';
+            });
+
+        setActiveService('youtube');
     </script>
 </body>
 </html>
